@@ -5,7 +5,8 @@
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  [ReactNativeNavigation bootstrapWithBridge:self launchOptions:launchOptions];
+  // RNN v7 bootstrap — AppDelegate conforms to RCTBridgeDelegate
+  [ReactNativeNavigation bootstrapWithDelegate:self launchOptions:launchOptions];
   return YES;
 }
 
