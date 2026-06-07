@@ -12,8 +12,8 @@ target 'LxMusic' do
 
   pod 'ReactNativeNavigation', :path => '../node_modules/react-native-navigation'
 
-  pod 'RNFileSystem', :path => 'LxMusic/Libraries'
-  pod 'RNLocalMediaMetadata', :path => 'LxMusic/Libraries'
+  pod 'RNFileSystem', :path => 'LxMusic/Libraries/RNFileSystem'
+  pod 'RNLocalMediaMetadata', :path => 'LxMusic/Libraries/RNLocalMediaMetadata'
 
   use_react_native!(
     :path => config[:reactNativePath],
