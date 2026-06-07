@@ -67,22 +67,24 @@ workflows:
       # Step 5: Build unsigned .app
       - name: Build unsigned .app
         script: |
+          cd ios
           xcodebuild \
-            -workspace ios/LxMusic.xcworkspace \
-            -scheme "$XCODE_SCHEME" \
+            -workspace LxMusic.xcworkspace \
+            -scheme LxMusic \
             -configuration Release \
             -sdk iphoneos \
-            -derivedDataPath ios/build/derived \
+            -derivedDataPath build/derived \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             clean build \
-            BUILD_DIR=./build/Build
+            BUILD_DIR=build/Build
 
       # Step 6: Locate .app, inject bundle, fake-sign, create IPA
       - name: Package unsigned IPA
         script: |
-          # Find the .app (xcodebuild outputs under build/Build/Release-iphoneos/)
+          cd ios
+          # Find the .app (output under ios/build/Build/Release-iphoneos/)
           APP_PATH=$(find build -name "LxMusic.app" -type d -path "*/Release-iphoneos/*" | head -1)
           if [ -z "$APP_PATH" ]; then
             APP_PATH=$(find build -name "*.app" -type d | head -1)
@@ -90,9 +92,9 @@ workflows:
           echo "Found .app at: $APP_PATH"
 
           # Copy JS bundle into .app
-          cp ios/build/main.jsbundle "$APP_PATH/main.jsbundle" 2>/dev/null || echo "No main.jsbundle found"
-          if [ -d ios/build/assets ]; then
-            cp -R ios/build/assets "$APP_PATH/assets"
+          cp build/main.jsbundle "$APP_PATH/main.jsbundle" 2>/dev/null || echo "No main.jsbundle found"
+          if [ -d build/assets ]; then
+            cp -R build/assets "$APP_PATH/assets"
           fi
 
           # Remove any existing _CodeSignature
@@ -104,12 +106,12 @@ workflows:
           fi
 
           # Fake-sign
-          ldid -S ios/entitlements.plist "$APP_PATH/LxMusic"
+          ldid -S entitlements.plist "$APP_PATH/LxMusic"
 
           # Create IPA
-          mkdir -p ios/build/Payload
-          cp -R "$APP_PATH" ios/build/Payload/
-          cd ios/build
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/
+          cd build
           zip -r LxMusic-unsigned.ipa Payload/ -x "*.DS_Store"
           echo "IPA created at: $(pwd)/LxMusic-unsigned.ipa"
           ls -lh LxMusic-unsigned.ipa
