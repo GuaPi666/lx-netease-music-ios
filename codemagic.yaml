@@ -1,0 +1,126 @@
+# LX Music iOS Build — Codemagic CI
+# https://codemagic.io/   Free plan: 500 min/month macOS build time
+#
+# Setup:
+# 1. Go to https://codemagic.io/start — log in with GitHub
+# 2. Click "Add application" → Select your GitHub repo
+# 3. Pick "React Native" template → Confirm
+# 4. Codemagic will auto-detect codemagic.yaml
+# 5. Every push to main or ios-* triggers a build
+#
+# After build: go to "Artifacts" tab → download LxMusic-unsigned.ipa
+
+workflows:
+  ios-build:
+    name: iOS Build (Unsigned / Fake-Signed)
+    instance_type: macos
+    max_build_duration: 60
+    environment:
+      vars:
+        XCODE_WORKSPACE: "ios/LxMusic.xcworkspace"
+        XCODE_SCHEME: "LxMusic"
+      node: latest
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+        - pattern: ios-*
+          include: true
+          source: true
+    scripts:
+      # Step 1: Install npm dependencies
+      - name: Install npm dependencies
+        script: |
+          npm install --ignore-scripts
+          node patchMediaLayout.js
+
+      # Step 2: Install CocoaPods
+      - name: Install CocoaPods
+        script: |
+          gem install cocoapods --no-document
+
+      # Step 3: Install Pods
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install --repo-update
+
+      # Step 4: Generate JS Bundle
+      - name: Generate JS Bundle
+        script: |
+          mkdir -p ios/build
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ios/build/main.jsbundle \
+            --assets-dest ios/build/assets
+
+      # Step 5: Build unsigned .app
+      - name: Build unsigned .app
+        script: |
+          cd ios
+          xcodebuild \
+            -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ./build/derived \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            clean build \
+            BUILD_DIR=./build/Build
+
+      # Step 6: Locate .app, inject bundle, fake-sign, create IPA
+      - name: Package unsigned IPA
+        script: |
+          # These codemagic env vars tell us where the .app is
+          cd ios
+
+          # Find the .app
+          APP_PATH=$(find build -name "LxMusic.app" -type d -path "*/Release-iphoneos/*" | head -1)
+          if [ -z "$APP_PATH" ]; then
+            # Fallback search
+            APP_PATH=$(find build -name "*.app" -type d | head -1)
+          fi
+          echo "Found .app at: $APP_PATH"
+
+          # Copy JS bundle into .app
+          cp build/main.jsbundle "$APP_PATH/main.jsbundle" 2>/dev/null || echo "No main.jsbundle found"
+          if [ -d build/assets ]; then
+            cp -R build/assets "$APP_PATH/assets"
+          fi
+
+          # Remove any existing _CodeSignature
+          rm -rf "$APP_PATH/_CodeSignature" 2>/dev/null || true
+
+          # Install ldid
+          if ! command -v ldid &> /dev/null; then
+            brew install ldid
+          fi
+
+          # Fake-sign
+          ldid -S"$PWD/ios/entitlements.plist" "$APP_PATH/LxMusic"
+
+          # Create IPA
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/
+          cd build
+          zip -r LxMusic-unsigned.ipa Payload/ -x "*.DS_Store"
+          echo "IPA created at: $(pwd)/LxMusic-unsigned.ipa"
+          ls -lh LxMusic-unsigned.ipa
+
+    artifacts:
+      - ios/build/LxMusic-unsigned.ipa
+      - ios/build/*.ipa
+    publishing:
+      email:
+        recipients:
+          - 2951629785@qq.com
+        notify:
+          success: true
+          failure: true

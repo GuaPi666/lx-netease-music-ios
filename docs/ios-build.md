@@ -33,27 +33,24 @@ build-ios.sh                             # 本地构建脚本
 
 ## 构建方式
 
-### 方式一：CircleCI（推荐）
+### 方式一：Codemagic（推荐，免费 500 分钟/月 macOS）
 
-本项目的 CI 已迁移至 **CircleCI**（免费 macOS runner，每月 250 分钟）。
+```yaml
+# 配置已在仓库根目录 codemagic.yaml
+```
 
 **设置方法：**
 
-1. 打开 https://app.circleci.com/signup 用 GitHub 账号登录
-2. 点击 **Projects** → 找到 `GuaPi666/lx-netease-music-ios` → 点击 **Set Up Project**
-3. 选择 `main` 分支 → 点击 **Set Up Project**
-4. 之后每次 push 到 `main` 或 `ios-*` 分支，CircleCI 会自动构建
-5. 构建完成后，在 CircleCI 的 **Artifacts** 标签页下载 `LxMusic-unsigned.ipa`
+1. 打开 https://codemagic.io/start — 用 GitHub 账号登录
+2. 点击 **Add application** → 选择 `GuaPi666/lx-netease-music-ios`
+3. 选择 **React Native** 模板 → 点击 **Confirm**
+4. Codemagic 会自动读取 `codemagic.yaml` 配置
+5. 之后每次 push 到 `main` 或 `ios-*` 分支，Codemagic 会自动构建
+6. 构建完成后，在 **Artifacts** 标签页下载 `LxMusic-unsigned.ipa`
 
-**构建状态：**
+> 免费计划每月 500 分钟 macOS 构建时间，足够 15-20 次构建。
 
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/GuaPi666/lx-netease-music-ios/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/GuaPi666/lx-netease-music-ios/tree/main)
-
-### 方式二：GitHub Actions 手动触发（不可用）
-
-> ⚠️ GitHub 免费账户不提供 macOS runner，此方式不可用。
-
-### 方式三：本地构建 (macOS)
+### 方式二：本地构建 (macOS / 黑苹果 VM)
 
 ```bash
 # 需要有 macOS + Xcode 15+
