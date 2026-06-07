@@ -12,7 +12,6 @@ target 'LxMusic' do
 
   pod 'react-native-navigation', :path => '../node_modules/react-native-navigation'
 
-  # Stub podspecs for Android-only packages (to prevent pod install failures)
   pod 'RNFileSystem', :path => 'LxMusic/Libraries'
   pod 'RNLocalMediaMetadata', :path => 'LxMusic/Libraries'
 
@@ -30,7 +29,6 @@ target 'LxMusic' do
       :mac_catalyst_enabled => false
     )
 
-    # Fix Xcode 15+ compatibility: remove -fno-objc-arc from some files
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.1'

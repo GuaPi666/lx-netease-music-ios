@@ -35,16 +35,21 @@ workflows:
           npm install --ignore-scripts
           node patchMediaLayout.js
 
-      # Step 2: Install CocoaPods
-      - name: Install CocoaPods
+      # Step 2: Install CocoaPods (Codemagic already has it, ensure latest)
+      - name: Ensure CocoaPods
         script: |
-          gem install cocoapods --no-document
+          echo "Ruby: $(ruby --version)"
+          echo "Pod: $(pod --version 2>/dev/null || echo not-installed)"
+          # Only install if missing
+          if ! command -v pod &> /dev/null; then
+            sudo gem install cocoapods --no-document
+          fi
 
-      # Step 3: Install Pods
+      # Step 3: Install Pods (no --repo-update for speed)
       - name: Install CocoaPods dependencies
         script: |
           cd ios
-          pod install --repo-update
+          pod install --verbose
 
       # Step 4: Generate JS Bundle
       - name: Generate JS Bundle
