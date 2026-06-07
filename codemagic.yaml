@@ -87,7 +87,6 @@ workflows:
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             "HEADER_SEARCH_PATHS=$HEADER_DIRS" \
-            "OTHER_LDFLAGS=\$(inherited) -ObjC -lPods-LxMusic" \
             clean build \
             BUILD_DIR="$PWD/build/Build"
 
