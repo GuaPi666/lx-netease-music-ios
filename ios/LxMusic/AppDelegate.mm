@@ -5,19 +5,11 @@
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  [ReactNativeNavigation bootstrapWithDelegate:self launchOptions:launchOptions];
+  [ReactNativeNavigation bootstrapWithBridge:self launchOptions:launchOptions];
   return YES;
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge {
-  return [self getBundleURL];
-}
-
-- (NSArray<id<RCTBridgeModule>> *)extraModulesForBridge:(RCTBridge *)bridge {
-  return [ReactNativeNavigation extraModulesForBridge:bridge];
-}
-
-- (NSURL *)getBundleURL {
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
