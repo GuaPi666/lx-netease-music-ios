@@ -9,12 +9,6 @@
 /* Begin PBXBuildFile section */
 		00B8A001 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A101 /* AppDelegate.mm */; };
 		00B8A002 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A102 /* main.m */; };
-		00B8A003 /* UtilsModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A109 /* UtilsModule.m */; };
-		00B8A004 /* CacheModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A10B /* CacheModule.m */; };
-		00B8A005 /* CryptoModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A10D /* CryptoModule.m */; };
-		00B8A006 /* LyricModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A10F /* LyricModule.m */; };
-		00B8A007 /* MusicWidgetModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A111 /* MusicWidgetModule.m */; };
-		00B8A008 /* UserApiModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A113 /* UserApiModule.m */; };
 		00B8A010 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01A9A106 /* LaunchScreen.storyboard */; };
 		00B8A012 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A9A115 /* Foundation.framework */; };
 		00B8A013 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A9A116 /* UIKit.framework */; };
@@ -202,12 +196,6 @@
 			files = (
 				00B8A001 /* AppDelegate.mm in Sources */,
 				00B8A002 /* main.m in Sources */,
-				00B8A003 /* UtilsModule.m in Sources */,
-				00B8A004 /* CacheModule.m in Sources */,
-				00B8A005 /* CryptoModule.m in Sources */,
-				00B8A006 /* LyricModule.m in Sources */,
-				00B8A007 /* MusicWidgetModule.m in Sources */,
-				00B8A008 /* UserApiModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

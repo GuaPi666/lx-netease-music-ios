@@ -29,21 +29,6 @@ workflows:
         - pattern: ios-*
           include: true
     scripts:
-      # Step 0: Switch to Xcode 15.x (Xcode 26 is incompatible with RN 0.73)
-      - name: Select Xcode 15.x
-        script: |
-          echo "Available Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null || echo "Cannot list"
-          # Try to find Xcode 15.x
-          XC15=$(ls -d /Applications/Xcode-15*.app 2>/dev/null | head -1)
-          if [ -n "$XC15" ]; then
-            sudo xcode-select -s "$XC15"
-            echo "Switched to: $XC15"
-          else
-            echo "No Xcode 15 found, using default"
-          fi
-          xcodebuild -version
-
       # Step 1: Install npm dependencies
       - name: Install npm dependencies
         script: |
