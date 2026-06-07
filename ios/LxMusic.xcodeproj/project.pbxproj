@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		00B8A001 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A101 /* AppDelegate.mm */; };
 		00B8A002 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 01A9A102 /* main.m */; };
-		00B8A010 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 01A9A106 /* LaunchScreen.storyboard */; };
 		00B8A012 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A9A115 /* Foundation.framework */; };
 		00B8A013 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A9A116 /* UIKit.framework */; };
 		00B8A014 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A9A117 /* AudioToolbox.framework */; };
@@ -26,7 +25,6 @@
 		01A9A102 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		01A9A103 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		01A9A104 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		01A9A106 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		01A9A108 /* UtilsModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UtilsModule.h; sourceTree = "<group>"; };
 		01A9A109 /* UtilsModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UtilsModule.m; sourceTree = "<group>"; };
 		01A9A10A /* CacheModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CacheModule.h; sourceTree = "<group>"; };
@@ -87,7 +85,6 @@
 				01A9A102 /* main.m */,
 				01A9A103 /* AppDelegate.h */,
 				01A9A104 /* Info.plist */,
-				01A9A106 /* LaunchScreen.storyboard */,
 						01A9A108 /* UtilsModule.h */,
 				01A9A109 /* UtilsModule.m */,
 				01A9A10A /* CacheModule.h */,
@@ -183,7 +180,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00B8A010 /* LaunchScreen.storyboard in Resources */,
 					);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
