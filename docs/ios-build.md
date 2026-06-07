@@ -33,16 +33,27 @@ build-ios.sh                             # 本地构建脚本
 
 ## 构建方式
 
-### 方式一：GitHub Actions（推荐）
+### 方式一：CircleCI（推荐）
 
-Push 到 `main` 或 `ios-*` 分支会自动触发 iOS 构建：
+本项目的 CI 已迁移至 **CircleCI**（免费 macOS runner，每月 250 分钟）。
 
-1. 在 GitHub 仓库 → **Actions** → **iOS Build (Unsigned/Fake-Signed)**
-2. 点击 **Run workflow**，可手动触发或等自动触发
-3. 构建完成后下载 `lx-music-ios-unsigned` artifact
-4. 解压获得 `LxMusic-unsigned.ipa`
+**设置方法：**
 
-### 方式二：本地构建 (macOS)
+1. 打开 https://app.circleci.com/signup 用 GitHub 账号登录
+2. 点击 **Projects** → 找到 `GuaPi666/lx-netease-music-ios` → 点击 **Set Up Project**
+3. 选择 `main` 分支 → 点击 **Set Up Project**
+4. 之后每次 push 到 `main` 或 `ios-*` 分支，CircleCI 会自动构建
+5. 构建完成后，在 CircleCI 的 **Artifacts** 标签页下载 `LxMusic-unsigned.ipa`
+
+**构建状态：**
+
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/GuaPi666/lx-netease-music-ios/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/GuaPi666/lx-netease-music-ios/tree/main)
+
+### 方式二：GitHub Actions 手动触发（不可用）
+
+> ⚠️ GitHub 免费账户不提供 macOS runner，此方式不可用。
+
+### 方式三：本地构建 (macOS)
 
 ```bash
 # 需要有 macOS + Xcode 15+
