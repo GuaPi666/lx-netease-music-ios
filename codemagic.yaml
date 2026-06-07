@@ -26,10 +26,8 @@ workflows:
       branch_patterns:
         - pattern: main
           include: true
-          source: true
         - pattern: ios-*
           include: true
-          source: true
     scripts:
       # Step 1: Install npm dependencies
       - name: Install npm dependencies
@@ -117,6 +115,12 @@ workflows:
     artifacts:
       - ios/build/LxMusic-unsigned.ipa
       - ios/build/*.ipa
+    # Cache CocoaPods between builds
+    cache:
+      cache_paths:
+        - ~/.cocoapods
+        - ios/Pods
+        - node_modules
     publishing:
       email:
         recipients:
