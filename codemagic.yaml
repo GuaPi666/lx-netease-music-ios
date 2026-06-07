@@ -16,6 +16,7 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
+      xcode: 15.4
       vars:
         XCODE_WORKSPACE: "ios/LxMusic.xcworkspace"
         XCODE_SCHEME: "LxMusic"

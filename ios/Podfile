@@ -12,9 +12,6 @@ target 'LxMusic' do
 
   pod 'ReactNativeNavigation', :path => '../node_modules/react-native-navigation'
 
-  pod 'RNFileSystem', :path => 'LxMusic/Libraries/RNFileSystem'
-  pod 'RNLocalMediaMetadata', :path => 'LxMusic/Libraries/RNLocalMediaMetadata'
-
   use_react_native!(
     :path => config[:reactNativePath],
     :hermes_enabled => false,
@@ -32,6 +29,10 @@ target 'LxMusic' do
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.1'
+        # Work around Xcode 26 linker strictness
+        config.build_settings['DEAD_CODE_STRIPPING'] = 'NO'
+        config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+        config.build_settings['OTHER_LDFLAGS'] ||= '$(inherited)'
       end
     end
   end
