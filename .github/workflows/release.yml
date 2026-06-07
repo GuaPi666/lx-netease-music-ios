@@ -1,9 +1,13 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - main
+  # 手动触发，因为此 fork 没有签名所需 secrets
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version override'
+        required: false
+        type: string
 
 jobs:
   Android:
