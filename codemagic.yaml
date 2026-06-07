@@ -68,22 +68,15 @@ workflows:
       - name: Build unsigned .app
         script: |
           cd ios
-          # Auto-discover all Pod header paths and library paths
+          # Gather all Pod header directories into one space-separated string
           PODS_ROOT="$PWD/Pods"
-          HEADER_PATHS="$(inherited)"
-          for d in "$PODS_ROOT"/Headers/Public/*/; do
-            [ -d "$d" ] && HEADER_PATHS="$HEADER_PATHS $d"
+          HEADER_DIRS='$(inherited)'
+          for d in "$PODS_ROOT"/Headers/Public/*; do
+            [ -d "$d" ] && HEADER_DIRS="$HEADER_DIRS $d"
           done
-          # Also include Podspec-level header dirs
-          [ -d "$PODS_ROOT/Headers/Public" ] && HEADER_PATHS="$HEADER_PATHS $PODS_ROOT/Headers/Public"
+          [ -d "$PODS_ROOT/Headers/Public" ] && HEADER_DIRS="$HEADER_DIRS $PODS_ROOT/Headers/Public"
 
-          LIB_PATHS="$(inherited)"
-          for d in "$PWD"/build/Build/*/; do
-            [ -d "$d" ] && LIB_PATHS="$LIB_PATHS $d"
-          done
-
-          echo "Header search paths: $HEADER_PATHS"
-          echo "Library search paths: $LIB_PATHS"
+          echo "HEADER_SEARCH_PATHS=$HEADER_DIRS"
 
           xcodebuild \
             -workspace LxMusic.xcworkspace \
@@ -93,9 +86,8 @@ workflows:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
-            HEADER_SEARCH_PATHS="$HEADER_PATHS" \
-            LIBRARY_SEARCH_PATHS="$LIB_PATHS" \
-            OTHER_LDFLAGS='$(inherited) -ObjC -l"Pods-LxMusic"' \
+            "HEADER_SEARCH_PATHS=$HEADER_DIRS" \
+            "OTHER_LDFLAGS=\$(inherited) -ObjC -lPods-LxMusic" \
             clean build \
             BUILD_DIR="$PWD/build/Build"
 
