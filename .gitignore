@@ -1,3 +1,6 @@
+.codegraph/
+.reasonix/
+
 # OSX
 #
 .DS_Store
