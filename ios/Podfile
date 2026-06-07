@@ -1,8 +1,5 @@
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-    "react-native/scripts/react_native_pods.rb",
-    {paths: [process.argv[1]]},
-  )', __dir__]).strip
+react_native_path = File.expand_path('../node_modules/react-native', __dir__)
+require File.join(react_native_path, 'scripts/react_native_pods')
 
 platform :ios, '16.1'
 
