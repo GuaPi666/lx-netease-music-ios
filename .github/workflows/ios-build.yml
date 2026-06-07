@@ -1,0 +1,231 @@
+name: iOS Build (Unsigned/Fake-Signed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version override (optional)'
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+      - 'ios-*'
+  release:
+    types: [published]
+
+jobs:
+  iOS:
+    name: iOS Build + Fake-Sign IPA
+    runs-on: macos-14
+    permissions:
+      contents: write
+    outputs:
+      package_version: ${{ steps.package_version.outputs.package_version }}
+      release_tag: ${{ steps.release_target.outputs.release_tag }}
+      release_name: ${{ steps.release_target.outputs.release_name }}
+      release_prerelease: ${{ steps.release_target.outputs.release_prerelease }}
+
+    steps:
+      - name: Check out git repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: |
+          npm install --ignore-scripts
+          npx react-native setup-ios-permissions
+        shell: bash
+
+      - name: Install ldid (fake-sign tool)
+        run: |
+          if ! command -v ldid &> /dev/null; then
+            brew install ldid
+          fi
+        shell: bash
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods -v '~> 1.15' --no-document
+        shell: bash
+
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+        shell: bash
+
+      - name: Generate JS Bundle
+        run: |
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ios/build/main.jsbundle \
+            --assets-dest ios/build/assets
+        shell: bash
+
+      - name: Build .app (unsigned)
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace LxMusic.xcworkspace \
+            -scheme LxMusic \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ./build/derived \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            clean build \
+            BUILD_DIR=./build/Build \
+            2>&1 | xcpretty
+        shell: bash
+
+      - name: Locate built .app
+        id: locate_app
+        run: |
+          APP_PATH=$(find ios/build -name "*.app" -type d | head -1)
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found .app at: $APP_PATH"
+        shell: bash
+
+      - name: Fake-sign with ldid
+        run: |
+          APP_PATH="${{ steps.locate_app.outputs.APP_PATH }}"
+          echo "Fake-signing app at: $APP_PATH"
+
+          # Create minimal entitlements for fake signing
+          cat > ios/build/entitlements.plist << 'EOP'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>get-task-allow</key>
+            <true/>
+            <key>application-identifier</key>
+            <string>com.lxmusic.ios</string>
+            <key>keychain-access-groups</key>
+            <array>
+              <string>com.lxmusic.ios</string>
+            </array>
+          </dict>
+          </plist>
+          EOP
+
+          # Remove any existing _CodeSignature
+          rm -rf "$APP_PATH/_CodeSignature" 2>/dev/null || true
+
+          # Fake-sign the binary
+          ldid -Sios/build/entitlements.plist "$APP_PATH/LxMusic"
+
+          # Verify fake-signature exists
+          codesign -dvvv "$APP_PATH" 2>&1 || echo "(unsigned binary — expected)"
+        shell: bash
+
+      - name: Package into IPA
+        run: |
+          APP_PATH="${{ steps.locate_app.outputs.APP_PATH }}"
+          mkdir -p ios/build/Payload
+          cp -R "$APP_PATH" ios/build/Payload/
+          cd ios/build
+          zip -r LxMusic-unsigned.ipa Payload/ -x "*.DS_Store"
+          echo "IPA created at: ios/build/LxMusic-unsigned.ipa"
+          ls -lh LxMusic-unsigned.ipa
+        shell: bash
+
+      - name: Get package version
+        id: package_version
+        run: |
+          PACKAGE_VERSION=$(node -p -e 'require("./package.json").version')
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION}" >> "$GITHUB_ENV"
+          echo "package_version=${PACKAGE_VERSION}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Determine release target
+        id: release_target
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_TAG="v${PACKAGE_VERSION}"
+          if gh release view "${BASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            RELEASE_TAG="${BASE_TAG}-ios-test.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+            RELEASE_NAME="${BASE_TAG} iOS test ${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+            RELEASE_PRERELEASE="true"
+          else
+            RELEASE_TAG="${BASE_TAG}"
+            RELEASE_NAME="${BASE_TAG}"
+            RELEASE_PRERELEASE="false"
+          fi
+
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
+          echo "RELEASE_NAME=${RELEASE_NAME}" >> "$GITHUB_ENV"
+          echo "RELEASE_PRERELEASE=${RELEASE_PRERELEASE}" >> "$GITHUB_ENV"
+          echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "release_name=${RELEASE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "release_prerelease=${RELEASE_PRERELEASE}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p artifacts
+          cp ios/build/LxMusic-unsigned.ipa artifacts/
+          # Also copy the .app for debugging
+          # cp -R "${{ steps.locate_app.outputs.APP_PATH }}" artifacts/LxMusic.app 2>/dev/null || true
+          cd artifacts
+          md5sum *.ipa > MD5SUMS.txt
+          ls -lh
+        shell: bash
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lx-music-ios-unsigned
+          path: artifacts/
+
+  Release:
+    name: iOS Release
+    runs-on: ubuntu-latest
+    needs: [iOS]
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lx-music-ios-unsigned
+          path: ./artifacts
+
+      - name: Generate release notes
+        run: |
+          cat > RELEASE_NOTES.md << 'EOF'
+  ### iOS Build (Unsigned / Fake-Signed)
+
+  This IPA is **fake-signed** for **jailbroken devices only**.
+
+  #### Installation
+  - **Jailbroken**: Install via Filza + AppSync Unified, or TrollStore.
+  - **Non-jailbroken**: Not supported — use a free Apple Developer account for a 7-day signed build.
+
+  #### Notes
+  - Desktop lyrics, cache clear, crypto native module are **stub implementations** on iOS.
+  - Some Android-only features (installApk, battery optimization) are not available.
+  EOF
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.iOS.outputs.release_name || github.ref_name }}
+          prerelease: ${{ needs.iOS.outputs.release_prerelease || true }}
+          tag_name: ${{ needs.iOS.outputs.release_tag || github.ref_name }}
+          files: |
+            artifacts/LxMusic-unsigned.ipa
+          body_path: RELEASE_NOTES.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

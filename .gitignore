@@ -66,3 +66,11 @@ buck-out/
 
 # testing
 /coverage
+
+# iOS build artifacts
+/ios/build/
+*.ipa
+
+# Build tools
+/generate-xcodeproj.js
+!/build-ios.sh
