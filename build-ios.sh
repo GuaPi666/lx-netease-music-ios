@@ -70,29 +70,11 @@ cd ..
 # 5. Fake-sign with ldid
 echo "[5/6] Fake-signing with ldid..."
 
-# Create minimal entitlements
-cat > ios/build/entitlements.plist << 'EOP'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>get-task-allow</key>
-  <true/>
-  <key>application-identifier</key>
-  <string>com.lxmusic.ios</string>
-  <key>keychain-access-groups</key>
-  <array>
-    <string>com.lxmusic.ios</string>
-  </array>
-</dict>
-</plist>
-EOP
-
 # Remove any existing _CodeSignature directory
 rm -rf "$APP_PATH/_CodeSignature" 2>/dev/null || true
 
 # Fake-sign the mach-o binary
-ldid -Sios/build/entitlements.plist "$APP_PATH/LxMusic"
+ldid -Sios/entitlements.plist "$APP_PATH/LxMusic"
 
 echo "Fake-sign complete."
 

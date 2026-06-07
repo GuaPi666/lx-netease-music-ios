@@ -60,22 +60,7 @@ jobs:
       - name: Generate Entitlements
         run: |
           mkdir -p ios/build
-          cat > ios/build/entitlements.plist << 'EOP'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>get-task-allow</key>
-            <true/>
-            <key>application-identifier</key>
-            <string>com.lxmusic.ios</string>
-            <key>keychain-access-groups</key>
-            <array>
-              <string>com.lxmusic.ios</string>
-            </array>
-          </dict>
-          </plist>
-          EOP
+          cp ios/entitlements.plist ios/build/entitlements.plist
         shell: bash
 
       - name: Generate JS Bundle
