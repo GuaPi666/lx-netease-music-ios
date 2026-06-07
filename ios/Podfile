@@ -5,7 +5,6 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, '16.1'
-use_frameworks! :linkage => :static
 
 target 'LxMusic' do
   config = use_native_modules!
@@ -29,11 +28,44 @@ target 'LxMusic' do
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.1'
-        # Work around Xcode 26 linker strictness
-        config.build_settings['DEAD_CODE_STRIPPING'] = 'NO'
-        config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
-        config.build_settings['OTHER_LDFLAGS'] ||= '$(inherited)'
       end
     end
+
+    # Inject Pod header paths into our hand-written pbxproj  
+    project_dir = Pod::Config.instance.installation_root
+    project_path = File.join(project_dir, 'LxMusic.xcodeproj', 'project.pbxproj')
+    pods_root = File.join(project_dir, 'Pods')
+    
+    next unless File.exist?(project_path)
+
+    # Discover all pod header directories
+    headers_public = File.join(pods_root, 'Headers', 'Public')
+    pod_header_dirs = if Dir.exist?(headers_public)
+      Dir.glob("#{headers_public}/*").select { |d| File.directory?(d) }
+    else
+      []
+    end
+
+    # Build HEADER_SEARCH_PATHS array entries
+    path_entries = ['"$(inherited)"']
+    path_entries.concat(pod_header_dirs.map { |d| %Q("#{d}") })
+    path_entries << %Q("#{headers_public}")
+    
+    header_search_paths = path_entries.join(",\n\t\t\t\t")
+    
+    # Build OTHER_LDFLAGS
+    ldflags = ['"$(inherited)"', '-ObjC', '-l"Pods-LxMusic"'].join(",\n\t\t\t\t")
+
+    pbxproj = File.read(project_path)
+
+    # Inject into target Debug (0A00D010) and Release (0A00D020) configs
+    debug_block = "\t\t\tHEADER_SEARCH_PATHS = (\n#{header_search_paths}\n\t\t\t);\n\t\t\tOTHER_LDFLAGS = (\n#{ldflags}\n\t\t\t);"
+    release_block = "\t\t\tHEADER_SEARCH_PATHS = (\n#{header_search_paths}\n\t\t\t);\n\t\t\tOTHER_LDFLAGS = (\n#{ldflags}\n\t\t\t);"
+
+    pbxproj.sub!('0A00D010 /* Debug */ = {', "0A00D010 /* Debug */ = {\n#{debug_block}")
+    pbxproj.sub!('0A00D020 /* Release */ = {', "0A00D020 /* Release */ = {\n#{release_block}")
+
+    File.write(project_path, pbxproj)
+    puts "Injected #{pod_header_dirs.length} pod header paths into pbxproj"
   end
 end

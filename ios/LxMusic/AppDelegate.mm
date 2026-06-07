@@ -1,5 +1,5 @@
 #import "AppDelegate.h"
-#import <ReactNativeNavigation/ReactNativeNavigation.h>
+#import <ReactNativeNavigation.h>
 #import <React/RCTBundleURLProvider.h>
 
 @implementation AppDelegate
