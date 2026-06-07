@@ -33,7 +33,9 @@ workflows:
       - name: Install npm dependencies
         script: |
           npm install --ignore-scripts
-          node patchMediaLayout.js
+          node patchMediaLayout.js 2>/dev/null || true
+          # Patch react-native-track-player fork (TypeScript source → needs lib/ entry)
+          node patchTrackPlayer.js
 
       # Step 2: Install CocoaPods (Codemagic already has it, ensure latest)
       - name: Ensure CocoaPods
