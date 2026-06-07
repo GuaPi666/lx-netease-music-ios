@@ -17,7 +17,7 @@ on:
 jobs:
   iOS:
     name: iOS Build + Fake-Sign IPA
-    runs-on: macos-14
+    runs-on: macos-latest
     permissions:
       contents: write
     outputs:
@@ -39,7 +39,7 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm install --ignore-scripts
-          npx react-native setup-ios-permissions
+          node patchMediaLayout.js
         shell: bash
 
       - name: Install ldid (fake-sign tool)
@@ -51,13 +51,34 @@ jobs:
 
       - name: Install CocoaPods
         run: |
-          gem install cocoapods -v '~> 1.15' --no-document
+          gem install cocoapods --no-document
         shell: bash
 
       - name: Install Pods
         run: |
           cd ios
           pod install --repo-update
+        shell: bash
+
+      - name: Generate Entitlements
+        run: |
+          mkdir -p ios/build
+          cat > ios/build/entitlements.plist << 'EOP'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>get-task-allow</key>
+            <true/>
+            <key>application-identifier</key>
+            <string>com.lxmusic.ios</string>
+            <key>keychain-access-groups</key>
+            <array>
+              <string>com.lxmusic.ios</string>
+            </array>
+          </dict>
+          </plist>
+          EOP
         shell: bash
 
       - name: Generate JS Bundle
@@ -95,28 +116,20 @@ jobs:
           echo "Found .app at: $APP_PATH"
         shell: bash
 
+      - name: Copy JS Bundle & Assets into .app
+        run: |
+          APP_PATH="${{ steps.locate_app.outputs.APP_PATH }}"
+          cp ios/build/main.jsbundle "$APP_PATH/main.jsbundle"
+          if [ -d ios/build/assets ]; then
+            cp -R ios/build/assets "$APP_PATH/assets"
+          fi
+          echo "Bundle + assets copied to .app"
+        shell: bash
+
       - name: Fake-sign with ldid
         run: |
           APP_PATH="${{ steps.locate_app.outputs.APP_PATH }}"
           echo "Fake-signing app at: $APP_PATH"
-
-          # Create minimal entitlements for fake signing
-          cat > ios/build/entitlements.plist << 'EOP'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>get-task-allow</key>
-            <true/>
-            <key>application-identifier</key>
-            <string>com.lxmusic.ios</string>
-            <key>keychain-access-groups</key>
-            <array>
-              <string>com.lxmusic.ios</string>
-            </array>
-          </dict>
-          </plist>
-          EOP
 
           # Remove any existing _CodeSignature
           rm -rf "$APP_PATH/_CodeSignature" 2>/dev/null || true
