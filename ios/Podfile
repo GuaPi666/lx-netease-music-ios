@@ -10,7 +10,7 @@ use_frameworks! :linkage => :static
 target 'LxMusic' do
   config = use_native_modules!
 
-  pod 'react-native-navigation', :path => '../node_modules/react-native-navigation'
+  pod 'ReactNativeNavigation', :path => '../node_modules/react-native-navigation'
 
   pod 'RNFileSystem', :path => 'LxMusic/Libraries'
   pod 'RNLocalMediaMetadata', :path => 'LxMusic/Libraries'
