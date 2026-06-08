@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 #import <ReactNativeNavigation.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTBridge.h>
 
 @implementation AppDelegate {
   BOOL _jsLoaded;
@@ -24,25 +25,35 @@
 
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(jsDidLoad:) name:RCTJavaScriptDidLoadNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(jsDidFail:) name:RCTJavaScriptDidFailToLoadNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contentAppeared:) name:RCTContentDidAppearNotification object:nil];
 
   AppDelegate *selfRef = self;
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 12 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
     if (!selfRef->_jsLoaded) {
       [selfRef showFallback:[NSString stringWithFormat:@"TIMEOUT\n\n%@", _capturedLog]];
     }
   });
 
+  [_capturedLog appendString:@"[native] Creating bridge...\n"];
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  [_capturedLog appendString:[NSString stringWithFormat:@"[native] Bridge: %@\n", bridge ? @"created" : @"NULL"]];
   [_capturedLog appendString:@"[native] Bootstrapping RNN...\n"];
-  [ReactNativeNavigation bootstrapWithDelegate:self launchOptions:launchOptions];
+  [ReactNativeNavigation bootstrapWithBridge:bridge];
+  [_capturedLog appendString:@"[native] RNN done\n"];
+  
   return YES;
 }
 
 - (void)jsDidLoad:(NSNotification *)note {
   _jsLoaded = YES;
-  [_capturedLog appendString:@"[native] JS loaded\n"];
+  [_capturedLog appendString:@"[native] JS loaded!\n"];
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_fallbackWindow) self->_fallbackWindow.hidden = YES;
   });
+}
+
+- (void)contentAppeared:(NSNotification *)note {
+  [_capturedLog appendString:@"[native] Content appeared!\n"];
 }
 
 - (void)jsDidFail:(NSNotification *)note {
