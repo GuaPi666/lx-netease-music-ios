@@ -1,5 +1,6 @@
 #import "UtilsModule.h"
 #import <UIKit/UIKit.h>
+#import <UserNotifications/UserNotifications.h>
 
 @implementation UtilsModule
 {
@@ -87,7 +88,20 @@ RCT_EXPORT_METHOD(requestNotificationPermission:(RCTPromiseResolveBlock)resolve 
 RCT_EXPORT_METHOD(shareText:(NSString *)shareTitle title:(NSString *)title text:(NSString *)text resolve:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
   dispatch_async(dispatch_get_main_queue(), ^{
     UIActivityViewController *controller = [[UIActivityViewController alloc] initWithActivityItems:@[text] applicationActivities:nil];
-    UIViewController *rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+    UIViewController *rootVC = nil;
+    if (@available(iOS 15.0, *)) {
+      NSSet<UIScene *> *scenes = [UIApplication sharedApplication].connectedScenes;
+      for (UIScene *scene in scenes) {
+        if (scene.activationState == UISceneActivationStateForegroundActive && [scene isKindOfClass:[UIWindowScene class]]) {
+          UIWindowScene *windowScene = (UIWindowScene *)scene;
+          rootVC = windowScene.keyWindow.rootViewController;
+          break;
+        }
+      }
+    }
+    if (!rootVC) {
+      rootVC = [UIApplication sharedApplication].keyWindow.rootViewController;
+    }
     if (controller.popoverPresentationController) {
       controller.popoverPresentationController.sourceView = rootVC.view;
     }
