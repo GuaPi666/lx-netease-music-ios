@@ -1,8 +1,6 @@
 #import "AppDelegate.h"
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTBridge.h>
-#import <React/RCTRootView.h>
-#import <React/RCTBridge+Private.h>
 
 // MINIMAL TEST: Create RCTBridge directly, bypass RNN entirely
 // Verify JS engine boots and console.error works
@@ -43,7 +41,6 @@
   [_capturedLog appendString:@"[native] Creating bridge...\n"];
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   [_capturedLog appendFormat:@"[native] Bridge: %@\n", bridge];
-  [_capturedLog appendFormat:@"[native] Bridge.valid: %d, loading: %d\n", bridge.isValid, bridge.isLoading];
   [_capturedLog appendString:@"[native] Waiting for JS to load...\n"];
 
   // Also show a base window so we're a proper app
