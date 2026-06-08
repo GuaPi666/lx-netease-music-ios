@@ -1,32 +1,30 @@
 import { NativeModules, NativeEventEmitter } from 'react-native'
 
 const { MusicWidgetModule } = NativeModules
+const M = (MusicWidgetModule || {}) as any
 
-const widgetEmitter = new NativeEventEmitter(MusicWidgetModule)
+const widgetEmitter = MusicWidgetModule ? new NativeEventEmitter(MusicWidgetModule) : null
 
-/**
- * Update the home screen widget with current playback info
- */
 export const updateWidget = async (
     title: string,
     artist: string,
     isPlaying: boolean,
     artworkUrl?: string,
 ): Promise<void> => {
-    return MusicWidgetModule.updateWidget(title, artist, isPlaying, artworkUrl ?? '')
+  if (M.updateWidget) return M.updateWidget(title, artist, isPlaying, artworkUrl ?? '')
 }
 
-/**
- * Listen for widget button press events
- */
 export const onWidgetPlayPause = (callback: () => void) => {
-    return widgetEmitter.addListener('widget-play-pause', callback)
+  if (widgetEmitter) return widgetEmitter.addListener('widget-play-pause', callback)
+  return { remove: () => {} }
 }
 
 export const onWidgetPrev = (callback: () => void) => {
-    return widgetEmitter.addListener('widget-prev', callback)
+  if (widgetEmitter) return widgetEmitter.addListener('widget-prev', callback)
+  return { remove: () => {} }
 }
 
 export const onWidgetNext = (callback: () => void) => {
-    return widgetEmitter.addListener('widget-next', callback)
+  if (widgetEmitter) return widgetEmitter.addListener('widget-next', callback)
+  return { remove: () => {} }
 }
