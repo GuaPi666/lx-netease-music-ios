@@ -28,7 +28,6 @@
 
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(jsDidLoad:) name:RCTJavaScriptDidLoadNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(jsDidFail:) name:RCTJavaScriptDidFailToLoadNotification object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(contentAppeared:) name:RCTContentDidAppearNotification object:nil];
 
   AppDelegate *selfRef = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
