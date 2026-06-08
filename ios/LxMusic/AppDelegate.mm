@@ -1,6 +1,8 @@
 #import "AppDelegate.h"
 #import <ReactNativeNavigation.h>
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTBridge.h>
+#import <React/RCTRootView.h>
 
 @implementation AppDelegate {
   BOOL _jsLoaded;
@@ -8,46 +10,59 @@
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-  // 1. Check JS bundle exists
   NSURL *jsBundleURL = [self sourceURLForBridge:nil];
   BOOL bundleExists = [[NSFileManager defaultManager] fileExistsAtPath:jsBundleURL.path];
-  NSLog(@"[LXMusic] JS Bundle: %@, exists=%d", jsBundleURL.path, bundleExists);
+  NSNumber *bundleSize = bundleExists ? @([[[NSFileManager defaultManager] attributesOfItemAtPath:jsBundleURL.path error:nil] fileSize]) : @0;
+  NSLog(@"[LXMusic] JS Bundle: %@, exists=%d, size=%@", jsBundleURL.path, bundleExists, bundleSize);
 
   if (!bundleExists) {
     [self showFallbackWindow:[NSString stringWithFormat:@"JS Bundle 缺失\n%@", jsBundleURL.path]];
     return YES;
   }
 
-  // 2. Monitor JS load
+  // Listen for JS load events
   [[NSNotificationCenter defaultCenter] addObserver:self
     selector:@selector(jsDidLoad:) name:RCTJavaScriptDidLoadNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self
     selector:@selector(jsDidFail:) name:RCTJavaScriptDidFailToLoadNotification object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+    selector:@selector(rnContentDidAppear:) name:RCTContentDidAppearNotification object:nil];
 
-  // 3. Timeout fallback (8s)
+  // 8s timeout fallback
   AppDelegate *selfRef = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 8 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
     if (!selfRef->_jsLoaded) {
-      [selfRef showFallbackWindow:@"JS 加载超时\n\n可能原因:\n- 原生模块缺失\n- RNN 初始化失败\n- JS bundle 内部错误"];
+      [selfRef showFallbackWindow:@"JS 加载超时\n\n可能原因:\n- RNN 未完成初始化\n- registerAppLaunchedListener 未触发\n- JS bundle 内部错误"];
     }
   });
 
-  // 4. Bootstrap RNN (using deprecated API — the only one available in RNN v7)
-  [ReactNativeNavigation bootstrapWithDelegate:self launchOptions:launchOptions];
+  // RNN v7: create bridge FIRST, then bootstrap
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  [ReactNativeNavigation bootstrapWithBridge:bridge];
 
   return YES;
 }
 
 - (void)jsDidLoad:(NSNotification *)note {
   _jsLoaded = YES;
-  NSLog(@"[LXMusic] ✅ JS bundle loaded successfully");
+  NSLog(@"[LXMusic] ✅ JS bundle loaded");
+}
+
+- (void)rnContentDidAppear:(NSNotification *)note {
+  NSLog(@"[LXMusic] ✅ RN content appeared! Hiding fallback.");
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self->_fallbackWindow) {
+      self->_fallbackWindow.hidden = YES;
+      self->_fallbackWindow = nil;
+    }
+  });
 }
 
 - (void)jsDidFail:(NSNotification *)note {
   _jsLoaded = YES;
   NSError *error = note.userInfo[@"error"];
   dispatch_async(dispatch_get_main_queue(), ^{
-    [self showFallbackWindow:[NSString stringWithFormat:@"JS 加载失败\n%@", error.localizedDescription ?: @"未知"]];
+    [self showFallbackWindow:[NSString stringWithFormat:@"JS 加载失败\n%@", error.localizedDescription ?: @"未知错误"]];
   });
 }
 
@@ -58,9 +73,7 @@
   _fallbackWindow.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1.0];
 
   UIScrollView *scroll = [[UIScrollView alloc] initWithFrame:_fallbackWindow.bounds];
-  scroll.contentSize = CGSizeMake(_fallbackWindow.bounds.size.width, 2000);
-
-  UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(20, 80, _fallbackWindow.bounds.size.width - 40, 400)];
+  UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(20, 80, _fallbackWindow.bounds.size.width - 40, 600)];
   label.textColor = [UIColor colorWithRed:1.0 green:0.5 blue:0.0 alpha:1.0];
   label.font = [UIFont systemFontOfSize:14];
   label.numberOfLines = 0;
