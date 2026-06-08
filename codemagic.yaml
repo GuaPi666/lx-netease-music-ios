@@ -53,10 +53,11 @@ workflows:
           cd ios
           pod install --verbose
 
-      # Step 4: Generate JS Bundle
+      # Step 4: Generate JS Bundle (Hermes)
       - name: Generate JS Bundle
         script: |
           mkdir -p ios/build
+          export USE_HERMES=1
           npx react-native bundle \
             --platform ios \
             --dev false \
@@ -83,6 +84,7 @@ workflows:
             -scheme LxMusic \
             -configuration Release \
             -sdk iphoneos \
+            USE_HERMES=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
