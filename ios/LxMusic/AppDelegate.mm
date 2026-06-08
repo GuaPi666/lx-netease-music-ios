@@ -1,13 +1,10 @@
 #import "AppDelegate.h"
 #import <ReactNativeNavigation.h>
 #import <React/RCTBundleURLProvider.h>
-#import <React/RCTBridge.h>
-#import <React/RCTRootView.h>
 
 @implementation AppDelegate {
   BOOL _jsLoaded;
   UIWindow *_fallbackWindow;
-  RCTBridge *_bridge;
 }
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
@@ -28,18 +25,15 @@
     selector:@selector(jsDidFail:) name:RCTJavaScriptDidFailToLoadNotification object:nil];
 
   // 3. Timeout fallback (8s)
-  __weak typeof(self) weakSelf = self;
+  AppDelegate *selfRef = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 8 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-    if (!weakSelf->_jsLoaded) {
-      [weakSelf showFallbackWindow:@"JS 加载超时\n\n可能原因:\n- 原生模块缺失\n- RNN 初始化失败\n- JS bundle 内部错误"];
+    if (!selfRef->_jsLoaded) {
+      [selfRef showFallbackWindow:@"JS 加载超时\n\n可能原因:\n- 原生模块缺失\n- RNN 初始化失败\n- JS bundle 内部错误"];
     }
   });
 
-  // 4. Create bridge and bootstrap RNN
-  // NOTE: RNSNavigation v7 deprecated bootstrapWithDelegate:,
-  // bootstrapWithBridge: is the correct (non-deprecated) API
-  _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
-  [ReactNativeNavigation bootstrapWithBridge:_bridge];
+  // 4. Bootstrap RNN (using deprecated API — the only one available in RNN v7)
+  [ReactNativeNavigation bootstrapWithDelegate:self launchOptions:launchOptions];
 
   return YES;
 }
