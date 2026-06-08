@@ -1,18 +1,27 @@
 /**
  * @format
  */
-import { AppRegistry } from 'react-native'
-import './shim'
 
-console.error('=== CRASH TEST: index.js started ===')
+// Minimal bootstrap to verify JS engine starts
+console.error('=== JS ENGINE STARTED ===')
 
-// Simple vanilla RN entry point as safety net
-const EmptyView = () => null
-AppRegistry.registerComponent('LxMusic', () => EmptyView)
+var React = require('react')
+var RN = require('react-native')
+var Buffer = require('@craftzdog/react-native-buffer').Buffer
 
+console.error('=== MODULES OK ===')
+
+// Register a minimal component
+var EmptyView = function() { return React.createElement(RN.View, {style:{flex:1,backgroundColor:'black'}}) }
+RN.AppRegistry.registerComponent('LxMusic', function() { return EmptyView })
+
+console.error('=== REGISTERED OK ===')
+
+// Try the real app
 try {
-  const app = require('./src/app')
-  console.error('=== src/app loaded OK ===', typeof app)
-} catch (e) {
-  console.error('=== FATAL: app load failed ===', e.message)
+  require('./src/app')
+  console.error('=== src/app loaded OK ===')
+} catch(e) {
+  console.error('=== src/app FAILED: ' + e.message + ' ===')
+  if (e.stack) console.error(e.stack)
 }
